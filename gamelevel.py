@@ -77,12 +77,13 @@ class GameLevel():
       shape.draw(self.__surface)
 
       if (shapes[0].isTouched(shape)):
-        shapes.remove(shape)
         if isinstance(shape, Rectangle):
           score += 1
+
+        shapes.remove(shape)
+        continue
       
       if isinstance(shape, Snowflake):
-        shape.setTemperature(shape.getTemperature() + 1)
         if not shape.isGrounded():
           shape.setPosition(
             [shape.getPosition()[0],
@@ -90,6 +91,8 @@ class GameLevel():
           )
         if shape.isMelted():
           shapes.remove(shape)
+        
+        shape.setTemperature(shape.getTemperature() + 1)
 
     return score
 
@@ -112,21 +115,20 @@ class GameLevel():
       int(self.__screen[1] * .43)]
     )
   
-  def handleCircleLaunchEvent(self, velocity):
+  def handleCircleLaunchEvent(self, circleVelocity):
     for event in pygame.event.get():
       if (event.type == pygame.MOUSEBUTTONUP):
-        if (velocity[0] == 0 and velocity[1] == 0):
-          velocity[0] = pygame.mouse.get_pos()[0] - self.__circleStartingPosition[0]
-          velocity[1] = self.__circleStartingPosition[1] - pygame.mouse.get_pos()[1]
+        if (circleVelocity[0] == 0 and circleVelocity[1] == 0):
+          circleVelocity[0] = pygame.mouse.get_pos()[0] - self.__circleStartingPosition[0]
+          circleVelocity[1] = self.__circleStartingPosition[1] - pygame.mouse.get_pos()[1]
 
-  def handleCircleFlyingEvent(self, circle, velocity, levelTransitionDelay):
-    if (velocity[0] != 0 and velocity[1] != 0):
+  def handleCircleFlyingEvent(self, circle, circleVelocity, levelTransitionDelay):
+    if (circleVelocity[0] != 0 and circleVelocity[1] != 0):
       if (circle.isTouched(Rectangle([0, 0, 0, 0], [0, 0], self.__screen[0], self.__floor))):
-        velocity[1] -= self.__gravitationalAcceleration * self.__deltaTime
-
+        circleVelocity[1] -= self.__gravitationalAcceleration * self.__deltaTime
         circle.setPosition(
-          [circle.getPosition()[0] + int(self.__deltaTime * velocity[0]),
-          circle.getPosition()[1] - int(self.__deltaTime * velocity[1])]
+          [circle.getPosition()[0] + int(self.__deltaTime * circleVelocity[0]),
+          circle.getPosition()[1] - int(self.__deltaTime * circleVelocity[1])]
         )
       else:
         return levelTransitionDelay - 1
@@ -135,18 +137,18 @@ class GameLevel():
   def run(self):
     shapes = self.getShapes()
     score = 0
-
-    velocity = [0, 0]
-    levelTransitionDelay = 100
     
+    circleVelocity = [0, 0]
+    
+    levelTransitionDelay = 100
     while levelTransitionDelay > 0:
       self.drawBackground(shapes)
       score += self.drawShapes(shapes)
       self.drawCrosshair(shapes[0])
       self.drawScore(score)
 
-      self.handleCircleLaunchEvent(velocity)
-      levelTransitionDelay = self.handleCircleFlyingEvent(shapes[0], velocity, levelTransitionDelay)
+      self.handleCircleLaunchEvent(circleVelocity)
+      levelTransitionDelay = self.handleCircleFlyingEvent(shapes[0], circleVelocity, levelTransitionDelay)
 
       pygame.display.update()
       self.__clock.tick(40)
