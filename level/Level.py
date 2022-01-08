@@ -8,7 +8,7 @@ from shape.Rectangle import Rectangle
 from shape.Snowflake import Snowflake
 
 
-class GameLevel():
+class Level():
     def __init__(self, circleRadius, squareLength, squaresPerRow, snowflakeColor):
         self.__screen = [600, 450]
         self.__floor = int(self.__screen[1] * .8)
