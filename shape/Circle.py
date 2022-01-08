@@ -11,12 +11,6 @@ class Circle(Shape):
     def getRadius(self):
         return self.__radius
 
-    def __str__(self):
-        return 'Circle(%r, %r, %r)' % (self.getColor(), self.getPosition(), self.__radius)
-
-    def draw(self, surface):
-        pygame.draw.circle(surface, self.getColor(), self.getPosition(), self.__radius)
-
     def getHitbox(self):
         return pygame.Rect(
             self.getPosition()[0] - self.__radius,
@@ -24,3 +18,6 @@ class Circle(Shape):
             self.__radius * 2,
             self.__radius * 2
         )
+
+    def draw(self, surface):
+        pygame.draw.circle(surface, self.getColor(), self.getPosition(), self.__radius)

@@ -1,6 +1,6 @@
 import pygame
 
-from Circle import Circle
+from shape.Circle import Circle
 
 
 class Snowflake(Circle):
