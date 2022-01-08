@@ -1,5 +1,5 @@
 import pygame
-from shape import Shape
+from shape.Shape import Shape
 
 class Rectangle(Shape):
   def __init__(self, color, position, height, width):
