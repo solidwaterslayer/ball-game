@@ -1,5 +1,7 @@
 import random
+
 import pygame
+
 from gamelevel import GameLevel
 
 circleRadiusChoices = [5, 20, 80, 360]

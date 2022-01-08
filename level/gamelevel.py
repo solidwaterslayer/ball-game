@@ -1,9 +1,12 @@
 import random
 import time
+
 import pygame
-from shape.Rectangle import Rectangle
+
 from shape.Circle import Circle
+from shape.Rectangle import Rectangle
 from shape.Snowflake import Snowflake
+
 
 class GameLevel():
   def __init__(self, circleRadius, squareLength, squaresPerRow, snowflakeColor):
