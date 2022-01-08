@@ -10,9 +10,9 @@ from shape.Snowflake import Snowflake
 
 class Level():
     def __init__(self, circleRadius, squareLength, squaresPerRow, snowflakeColor):
-        self.__screen = [600, 450]
+        self.__screen = [900, 450]
         self.__floor = int(self.__screen[1] * .8)
-        self.__circleStartingPosition = [20, self.__floor]
+        self.__circlePosition = [20, self.__floor, circleRadius]
         self.__surface = pygame.display.set_mode(self.__screen)
 
         self.__gravitationalAcceleration = 6.67
@@ -21,23 +21,14 @@ class Level():
         self.__font = pygame.font.SysFont('Comic Sans MS', 100)
         self.__clock = pygame.time.Clock()
 
-        self.__circleRadius = circleRadius
         self.__squareLength = squareLength
         self.__squaresPerRow = squaresPerRow
         self.__snowflakeColor = snowflakeColor
 
-    def __str__(self):
-        return 'GameState(%r, %r, %r, %r)' % (
-            self.__circleRadius,
-            self.__squareLength,
-            self.__squaresPerRow,
-            self.__snowflakeColor
-        )
-
     def getShapes(self):
-        shapes = [Circle((80, 30, 30), self.__circleStartingPosition, self.__circleRadius)]
+        shapes = [Circle([80, 30, 30], self.__circlePosition)]
 
-        lengthPerRow = self.__squareLength * self.__squaresPerRow;
+        lengthPerRow = self.__squareLength * self.__squaresPerRow
         squarePosition = [
             self.__screen[0] - self.__squareLength * (self.__squaresPerRow + 2),
             self.__floor - lengthPerRow
@@ -61,11 +52,10 @@ class Level():
             [200, 255, 200],
             [0, self.__floor, self.__screen[0], self.__screen[1] - self.__floor]
         )
-        if (random.randint(0, 3) == 2):
+        if random.randint(0, 3) == 2:
             shapes.append(Snowflake(
                 self.__snowflakeColor,
-                [random.randint(0, self.__screen[0]), 0],
-                5,
+                [random.randint(0, self.__screen[0]), 0, 5],
                 random.randint(self.__floor, self.__screen[1]),
                 0,
                 600
@@ -88,7 +78,7 @@ class Level():
                 if not shape.isGrounded():
                     shape.setPosition(
                         [shape.getPosition()[0],
-                         shape.getPosition()[1] + random.randint(5, 10)]
+                         shape.getPosition()[1] + random.randint(5, 10), 5]
                     )
                 if shape.isMelted():
                     shapes.remove(shape)
@@ -101,7 +91,7 @@ class Level():
         pygame.draw.line(
             self.__surface,
             [200, 255, 255],
-            circle.getPosition(),
+            circle.getPosition()[:2],
             pygame.mouse.get_pos(),
             5
         )
@@ -120,8 +110,8 @@ class Level():
         for event in pygame.event.get():
             if (event.type == pygame.MOUSEBUTTONUP):
                 if (circleVelocity[0] == 0 and circleVelocity[1] == 0):
-                    circleVelocity[0] = pygame.mouse.get_pos()[0] - self.__circleStartingPosition[0]
-                    circleVelocity[1] = self.__circleStartingPosition[1] - pygame.mouse.get_pos()[1]
+                    circleVelocity[0] = pygame.mouse.get_pos()[0] - self.__circlePosition[0]
+                    circleVelocity[1] = self.__circlePosition[1] - pygame.mouse.get_pos()[1]
 
     def handleCircleFlyingEvent(self, circle, circleVelocity, levelTransitionDelay):
         if (circleVelocity[0] != 0 and circleVelocity[1] != 0):
@@ -129,7 +119,7 @@ class Level():
                 circleVelocity[1] -= self.__gravitationalAcceleration * self.__deltaTime
                 circle.setPosition(
                     [circle.getPosition()[0] + int(self.__deltaTime * circleVelocity[0]),
-                     circle.getPosition()[1] - int(self.__deltaTime * circleVelocity[1])]
+                     circle.getPosition()[1] - int(self.__deltaTime * circleVelocity[1]), circle.getPosition()[2]],
                 )
             else:
                 return levelTransitionDelay - 1
