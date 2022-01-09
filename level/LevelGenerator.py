@@ -1,4 +1,5 @@
 import random
+import time
 
 import pygame
 
@@ -24,3 +25,4 @@ if __name__ == '__main__':
             snowflakeColorChoices[random.randint(0, 2)]
         )
         gameLevel.run()
+        time.sleep(0.5)

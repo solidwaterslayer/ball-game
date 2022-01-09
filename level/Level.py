@@ -1,5 +1,5 @@
 import random
-import time
+import sys
 
 import pygame
 
@@ -9,135 +9,113 @@ from shape.Snowflake import Snowflake
 
 
 class Level:
-    def __init__(self, circleRadius, squareLength, squaresPerRow, snowflakeColor):
-        self.__shapes = []
-        self.__screen = [900, 450]
-        self.__floor = int(self.__screen[1] * .8)
-        self.__circlePosition = [20, self.__floor, circleRadius]
-        self.__surface = pygame.display.set_mode(self.__screen)
-
-        self.__gravitationalAcceleration = 6.67
-        self.__deltaTime = 0.1
-
-        self.__font = pygame.font.SysFont('Comic Sans MS', 100)
-        self.__clock = pygame.time.Clock()
-
-        self.__squareLength = squareLength
-        self.__squaresPerRow = squaresPerRow
+    def __init__(self, radius, length, layers, snowflakeColor):
+        self.__radius = radius
+        self.__length = length
+        self.__layers = layers
         self.__snowflakeColor = snowflakeColor
 
-    def getShapes(self):
-        shapes = [Circle([80, 30, 30], self.__circlePosition)]
+        self.__screen = [900, 450]
+        self.__surface = pygame.display.set_mode(self.__screen)
+        self.__shapes = []
+        self.__font = pygame.font.SysFont('Comic Sans MS', 100)
 
-        lengthPerRow = self.__squareLength * self.__squaresPerRow
-        squarePosition = [
-            self.__screen[0] - self.__squareLength * (self.__squaresPerRow + 2),
-            self.__floor - lengthPerRow
+        self.__clock = pygame.time.Clock()
+
+    def initializeShapes(self):
+        floor = .8 * self.__screen[1]
+        self.__shapes = [
+            Rectangle([200, 255, 200], [0, floor, self.__screen[0], .2 * self.__screen[1]]),
+            Circle([80, 30, 30], [20, floor - self.__radius, self.__radius, 0, 0, 0]),
+            [],
+            []
         ]
-        for i in range(0, lengthPerRow, self.__squareLength):
-            for j in range(0, lengthPerRow, self.__squareLength):
-                x = squarePosition[0]
-                y = squarePosition[1]
 
-                shapes.append(Rectangle(
-                    [200, 200, 150],
-                    [x + i, y + j, self.__squareLength, self.__squareLength]
-                ))
+        hyperLength = self.__length * self.__layers
+        x = self.__screen[0] - 20 - hyperLength
+        y = floor - hyperLength
+        for i in range(0, hyperLength, self.__length):
+            for j in range(0, hyperLength, self.__length):
+                self.__shapes[2].append(Rectangle([200, 200, 150], [x + i, y + j, self.__length, self.__length]))
 
-        return shapes
-
-    def drawBackground(self, shapes):
-        self.__surface.fill([220, 220, 220])
-        pygame.draw.rect(
-            self.__surface,
-            [200, 255, 200],
-            [0, self.__floor, self.__screen[0], self.__screen[1] - self.__floor]
-        )
-        if random.randint(0, 3) == 2:
-            shapes.append(Snowflake(
+    def addSnowflake(self):
+        if random.randint(0, 3) == 0:
+            self.__shapes[3].append(Snowflake(
                 self.__snowflakeColor,
                 [random.randint(0, self.__screen[0]), 0, 5, 0],
-                [None, random.randint(self.__floor, self.__screen[1]), None, 600]
+                [None, random.randint(self.__shapes[0].getPosition()[1], self.__screen[1]), None, 600]
             ))
 
-    def drawShapes(self, shapes):
-        score = 0
+    def drawBackground(self):
+        self.__surface.fill([220, 220, 220])
 
-        for shape in shapes:
-            shape.draw(self.__surface)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.display.quit()
+                pygame.quit()
+                sys.exit()
 
-            if shapes[0].isTouching(shape):
-                if isinstance(shape, Rectangle):
-                    score += 1
+    def drawFloor(self):
+        self.__shapes[0].draw(self.__surface)
 
-                shapes.remove(shape)
-                continue
+    def drawCircle(self):
+        circle = self.__shapes[1]
+        circle.draw(self.__surface)
 
-            if isinstance(shape, Snowflake):
-                if not shape.isInFinalPosition(1):
-                    shape.getPosition()[1] += random.randint(5, 10)
-                if shape.isInFinalPosition(3):
-                    shapes.remove(shape)
+        if circle.getPosition()[3] != 0 and circle.getPosition()[4] != 0:
+            circle.getPosition()[0] += circle.getPosition()[3]
+            circle.getPosition()[1] -= circle.getPosition()[4]
+            circle.getPosition()[4] += circle.getPosition()[5]
+        for event in pygame.event.get():
+            if circle.getPosition()[3] == 0 and circle.getPosition()[4] == 0 and event.type == pygame.MOUSEBUTTONUP:
+                circle.getPosition()[3] = pygame.mouse.get_pos()[0] - circle.getPosition()[0]
+                circle.getPosition()[4] = circle.getPosition()[1] - pygame.mouse.get_pos()[1]
+                circle.getPosition()[5] = 20
 
-                shape.getPosition()[3] += 1
+    def drawCrosshair(self):
+        pygame.draw.line(self.__surface, [200, 255, 255], self.__shapes[1].getPosition()[:2], pygame.mouse.get_pos(), 5)
 
-        return score
+    def drawSquares(self):
+        for square in self.__shapes[2]:
+            square.draw(self.__surface)
 
-    def drawCrosshair(self, circle):
-        pygame.draw.line(
-            self.__surface,
-            [200, 255, 255],
-            circle.getPosition()[:2],
-            pygame.mouse.get_pos(),
-            5
-        )
+            if square.isTouching(self.__shapes[1]):
+                self.__shapes[2].remove(square)
 
-    def drawScore(self, score):
+    def drawScore(self):
         self.__surface.blit(
             self.__font.render(
-                str(int(score / self.__squaresPerRow ** 2 * 100)) + '%', True,
+                '{:.0f}%'.format(len(self.__shapes[2]) / self.__layers ** 2 * 100),
+                True,
                 [100, 100, 100]
             ),
             [int(self.__screen[0] * .40),
              int(self.__screen[1] * .43)]
         )
 
-    def handleCircleLaunchEvent(self, circleVelocity):
-        for event in pygame.event.get():
-            if event.type == pygame.MOUSEBUTTONUP:
-                if circleVelocity[0] == 0 and circleVelocity[1] == 0:
-                    circleVelocity[0] = pygame.mouse.get_pos()[0] - self.__circlePosition[0]
-                    circleVelocity[1] = self.__circlePosition[1] - pygame.mouse.get_pos()[1]
+    def drawSnowflakes(self):
+        for snowflake in self.__shapes[3]:
+            snowflake.draw(self.__surface)
 
-    def handleCircleFlyingEvent(self, circle, circleVelocity, levelTransitionDelay):
-        if circleVelocity[0] != 0 and circleVelocity[1] != 0:
-            if circle.isTouching(Rectangle([0, 0, 0, 0], [0, 0, self.__screen[0], self.__floor])):
-                circleVelocity[1] -= self.__gravitationalAcceleration * self.__deltaTime
-                circle.setPosition(
-                    [circle.getPosition()[0] + int(self.__deltaTime * circleVelocity[0]),
-                     circle.getPosition()[1] - int(self.__deltaTime * circleVelocity[1]), circle.getPosition()[2]],
-                )
-            else:
-                return levelTransitionDelay - 1
-        return levelTransitionDelay
+            if snowflake.isTouching(self.__shapes[1]):
+                self.__shapes[3].remove(snowflake)
+            snowflake.getPosition()[3] += 1
+            if not snowflake.isInFinalPosition(1):
+                snowflake.getPosition()[1] += random.randint(5, 10)
+            if snowflake.isInFinalPosition(3):
+                self.__shapes[3].remove(snowflake)
 
     def run(self):
-        shapes = self.getShapes()
-        score = 0
+        self.initializeShapes()
+        while True:
+            self.addSnowflake()
 
-        circleVelocity = [0, 0]
-
-        levelTransitionDelay = 100
-        while levelTransitionDelay > 0:
-            self.drawBackground(shapes)
-            score += self.drawShapes(shapes)
-            self.drawCrosshair(shapes[0])
-            self.drawScore(score)
-
-            self.handleCircleLaunchEvent(circleVelocity)
-            levelTransitionDelay = self.handleCircleFlyingEvent(shapes[0], circleVelocity, levelTransitionDelay)
-
+            self.drawBackground()
+            self.drawFloor()
+            self.drawCircle()
+            self.drawCrosshair()
+            self.drawSquares()
+            self.drawScore()
+            self.drawSnowflakes()
             pygame.display.update()
             self.__clock.tick(40)
-
-        time.sleep(0.5)
