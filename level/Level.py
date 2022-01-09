@@ -1,5 +1,6 @@
 import random
 import sys
+import time
 
 import pygame
 
@@ -20,6 +21,7 @@ class Level:
         self.__shapes = []
         self.__font = pygame.font.SysFont('Comic Sans MS', 100)
 
+        self.__ammunition = 1
         self.__clock = pygame.time.Clock()
 
     def initializeShapes(self):
@@ -62,15 +64,27 @@ class Level:
         circle = self.__shapes[1]
         circle.draw(self.__surface)
 
-        if circle.getPosition()[3] != 0 and circle.getPosition()[4] != 0:
+        if circle.isTouching(self.__shapes[0]):
+            circle.getPosition()[3] /= 1.1
+            if circle.getPosition()[3] < 0.2:
+                circle.getPosition()[3] = 0
+            circle.getPosition()[4] = 0
+            circle.getPosition()[5] = 0
+        if circle.getPosition()[3] != 0 or circle.getPosition()[4] != 0:
             circle.getPosition()[0] += circle.getPosition()[3]
             circle.getPosition()[1] -= circle.getPosition()[4]
-            circle.getPosition()[4] += circle.getPosition()[5]
-        for event in pygame.event.get():
-            if circle.getPosition()[3] == 0 and circle.getPosition()[4] == 0 and event.type == pygame.MOUSEBUTTONUP:
-                circle.getPosition()[3] = pygame.mouse.get_pos()[0] - circle.getPosition()[0]
-                circle.getPosition()[4] = circle.getPosition()[1] - pygame.mouse.get_pos()[1]
-                circle.getPosition()[5] = 20
+            circle.getPosition()[4] -= circle.getPosition()[5]
+        if any(pygame.mouse.get_pressed()) and self.__ammunition > 0:
+            circle.getPosition()[3] = min((pygame.mouse.get_pos()[0] - circle.getPosition()[0]) * .1, 40)
+            circle.getPosition()[4] = min((circle.getPosition()[1] - pygame.mouse.get_pos()[1]) * .1, 40)
+            circle.getPosition()[5] = 0.8
+            self.__ammunition -= 1
+        if not -circle.getPosition()[2] < circle.getPosition()[0] < self.__screen[0] + circle.getPosition()[2]:
+            circle.getPosition()[3] = 0
+            circle.getPosition()[4] = 0
+            circle.getPosition()[5] = 0
+        if circle.getPosition()[3] == 0 and circle.getPosition()[4] == 0 and circle.getPosition()[5] == 0 and self.__ammunition <= 0:
+            self.__ammunition -= 1
 
     def drawCrosshair(self):
         pygame.draw.line(self.__surface, [200, 255, 255], self.__shapes[1].getPosition()[:2], pygame.mouse.get_pos(), 5)
@@ -85,7 +99,7 @@ class Level:
     def drawScore(self):
         self.__surface.blit(
             self.__font.render(
-                '{:.0f}%'.format(len(self.__shapes[2]) / self.__layers ** 2 * 100),
+                '{:.0f}%'.format((self.__layers ** 2 - len(self.__shapes[2])) / self.__layers ** 2 * 100),
                 True,
                 [100, 100, 100]
             ),
@@ -107,14 +121,15 @@ class Level:
 
     def run(self):
         self.initializeShapes()
-        while True:
+        while self.__ammunition > -80:
             self.addSnowflake()
 
             self.drawBackground()
             self.drawFloor()
-            self.drawCircle()
-            self.drawCrosshair()
+            if self.drawCircle():
+                break
             self.drawSquares()
+            self.drawCrosshair()
             self.drawScore()
             self.drawSnowflakes()
             pygame.display.update()
