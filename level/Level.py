@@ -106,15 +106,15 @@ class Level:
         self.applyTerminalVelocityAndLaunch()
         self.applyWorldBorder()
 
-    def drawCrosshair(self):
-        pygame.draw.line(self.__surface, [200, 255, 255], self.__shapes[1].getPosition()[:2], pygame.mouse.get_pos(), 5)
-
     def drawSquares(self):
         for square in self.__shapes[2]:
             square.draw(self.__surface)
 
             if square.isTouching(self.__shapes[1]):
                 self.__shapes[2].remove(square)
+
+    def drawCrosshair(self):
+        pygame.draw.line(self.__surface, [200, 255, 255], self.__shapes[1].getPosition()[:2], pygame.mouse.get_pos(), 5)
 
     def drawScore(self):
         self.__surface.blit(
