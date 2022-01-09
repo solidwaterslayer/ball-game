@@ -59,30 +59,52 @@ class Level:
     def drawFloor(self):
         self.__shapes[0].draw(self.__surface)
 
-    def drawCircle(self):
+    def applyFrictionAndNormalForce(self):
         circle = self.__shapes[1]
-        circle.draw(self.__surface)
-
         x, y, radius, xVelocity, yVelocity, yAcceleration = circle.getPosition()
+
         if circle.isTouching(self.__shapes[0]):
-            if circle.getPosition()[3] < 0.2:
+            if xVelocity < 0.2:
                 circle.getPosition()[3] = 0
             else:
                 circle.getPosition()[3] /= 1.1
             circle.getPosition()[4], circle.getPosition()[5] = 0, 0
-        if circle.getPosition()[3] != 0 or circle.getPosition()[4] != 0:
-            circle.getPosition()[0] += circle.getPosition()[3]
-            circle.getPosition()[1] -= circle.getPosition()[4]
-            circle.getPosition()[4] -= circle.getPosition()[5]
+
+    def applyMotionAndGravity(self):
+        circle = self.__shapes[1]
+        x, y, radius, xVelocity, yVelocity, yAcceleration = circle.getPosition()
+
+        if xVelocity != 0 or yVelocity != 0:
+            circle.getPosition()[0] += xVelocity
+            circle.getPosition()[1] -= yVelocity
+            circle.getPosition()[4] -= yAcceleration
+
+    def applyTerminalVelocityAndLaunch(self):
+        circle = self.__shapes[1]
+        x, y, radius, xVelocity, yVelocity, yAcceleration = circle.getPosition()
+
         if any(pygame.mouse.get_pressed()) and self.__energy >= 80:
             circle.getPosition()[3] = min(40, (pygame.mouse.get_pos()[0] - x) * .1)
             circle.getPosition()[4] = min(40, (y - pygame.mouse.get_pos()[1]) * .1)
             circle.getPosition()[5] = 0.8
             self.__energy -= 1
-        if not (- radius < x < self.__screen[0] + radius):
-            circle.getPosition()[3], circle.getPosition()[4], circle.getPosition()[5] = 0, 0, 0
         if (self.__energy < 80) and (circle.getPosition()[3:] == [0, 0, 0]):
             self.__energy -= 1
+
+    def applyWorldBorder(self):
+        circle = self.__shapes[1]
+        x, y, radius, xVelocity, yVelocity, yAcceleration = circle.getPosition()
+
+        if not (- radius < x < self.__screen[0] + radius):
+            circle.getPosition()[3], circle.getPosition()[4], circle.getPosition()[5] = 0, 0, 0
+
+    def drawCircle(self):
+        self.__shapes[1].draw(self.__surface)
+
+        self.applyFrictionAndNormalForce()
+        self.applyMotionAndGravity()
+        self.applyTerminalVelocityAndLaunch()
+        self.applyWorldBorder()
 
     def drawCrosshair(self):
         pygame.draw.line(self.__surface, [200, 255, 255], self.__shapes[1].getPosition()[:2], pygame.mouse.get_pos(), 5)
@@ -111,8 +133,10 @@ class Level:
 
             if snowflake.isTouching(self.__shapes[1]):
                 self.__shapes[3].remove(snowflake)
+                continue
             if not (0 < snowflake.getPosition()[0] < self.__screen[0]) and snowflake.isInFinalPosition(1):
                 self.__shapes[3].remove(snowflake)
+                continue
 
             if not snowflake.isInFinalPosition(1):
                 snowflake.getPosition()[0] += snowflake.getPosition()[4]
