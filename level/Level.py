@@ -8,8 +8,9 @@ from shape.Rectangle import Rectangle
 from shape.Snowflake import Snowflake
 
 
-class Level():
+class Level:
     def __init__(self, circleRadius, squareLength, squaresPerRow, snowflakeColor):
+        self.__shapes = []
         self.__screen = [900, 450]
         self.__floor = int(self.__screen[1] * .8)
         self.__circlePosition = [20, self.__floor, circleRadius]
@@ -55,10 +56,8 @@ class Level():
         if random.randint(0, 3) == 2:
             shapes.append(Snowflake(
                 self.__snowflakeColor,
-                [random.randint(0, self.__screen[0]), 0, 5],
-                random.randint(self.__floor, self.__screen[1]),
-                0,
-                600
+                [random.randint(0, self.__screen[0]), 0, 5, 0],
+                [None, random.randint(self.__floor, self.__screen[1]), None, 600]
             ))
 
     def drawShapes(self, shapes):
@@ -67,7 +66,7 @@ class Level():
         for shape in shapes:
             shape.draw(self.__surface)
 
-            if (shapes[0].isTouching(shape)):
+            if shapes[0].isTouching(shape):
                 if isinstance(shape, Rectangle):
                     score += 1
 
@@ -75,15 +74,12 @@ class Level():
                 continue
 
             if isinstance(shape, Snowflake):
-                if not shape.isGrounded():
-                    shape.setPosition(
-                        [shape.getPosition()[0],
-                         shape.getPosition()[1] + random.randint(5, 10), 5]
-                    )
-                if shape.isMelted():
+                if not shape.isInFinalPosition(1):
+                    shape.getPosition()[1] += random.randint(5, 10)
+                if shape.isInFinalPosition(3):
                     shapes.remove(shape)
 
-                shape.setTemperature(shape.getTemperature() + 1)
+                shape.getPosition()[3] += 1
 
         return score
 
@@ -108,14 +104,14 @@ class Level():
 
     def handleCircleLaunchEvent(self, circleVelocity):
         for event in pygame.event.get():
-            if (event.type == pygame.MOUSEBUTTONUP):
-                if (circleVelocity[0] == 0 and circleVelocity[1] == 0):
+            if event.type == pygame.MOUSEBUTTONUP:
+                if circleVelocity[0] == 0 and circleVelocity[1] == 0:
                     circleVelocity[0] = pygame.mouse.get_pos()[0] - self.__circlePosition[0]
                     circleVelocity[1] = self.__circlePosition[1] - pygame.mouse.get_pos()[1]
 
     def handleCircleFlyingEvent(self, circle, circleVelocity, levelTransitionDelay):
-        if (circleVelocity[0] != 0 and circleVelocity[1] != 0):
-            if (circle.isTouching(Rectangle([0, 0, 0, 0], [0, 0, self.__screen[0], self.__floor]))):
+        if circleVelocity[0] != 0 and circleVelocity[1] != 0:
+            if circle.isTouching(Rectangle([0, 0, 0, 0], [0, 0, self.__screen[0], self.__floor])):
                 circleVelocity[1] -= self.__gravitationalAcceleration * self.__deltaTime
                 circle.setPosition(
                     [circle.getPosition()[0] + int(self.__deltaTime * circleVelocity[0]),
