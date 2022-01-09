@@ -1,6 +1,5 @@
 import random
 import sys
-import time
 
 import pygame
 
@@ -10,18 +9,19 @@ from shape.Snowflake import Snowflake
 
 
 class Level:
-    def __init__(self, radius, length, layers, snowflakeColor):
+    def __init__(self, radius, length, layers, snowflakeColor, wind):
         self.__radius = radius
         self.__length = length
         self.__layers = layers
         self.__snowflakeColor = snowflakeColor
+        self.__wind = wind
 
         self.__screen = [900, 450]
         self.__surface = pygame.display.set_mode(self.__screen)
         self.__shapes = []
         self.__font = pygame.font.SysFont('Comic Sans MS', 100)
 
-        self.__ammunition = 1
+        self.__energy = 80
         self.__clock = pygame.time.Clock()
 
     def initializeShapes(self):
@@ -41,12 +41,11 @@ class Level:
                 self.__shapes[2].append(Rectangle([200, 200, 150], [x + i, y + j, self.__length, self.__length]))
 
     def addSnowflake(self):
-        if random.randint(0, 3) == 0:
-            self.__shapes[3].append(Snowflake(
-                self.__snowflakeColor,
-                [random.randint(0, self.__screen[0]), 0, 5, 0],
-                [None, random.randint(self.__shapes[0].getPosition()[1], self.__screen[1]), None, 600]
-            ))
+        self.__shapes[3].append(Snowflake(
+            self.__snowflakeColor,
+            [random.randint(- self.__wind ** 2, self.__screen[0] + self.__wind ** 2), 0, 5, 0, self.__wind, random.randint(5, 20)],
+            [None, random.randint(self.__shapes[0].getPosition()[1], self.__screen[1]), None, 600]
+        ))
 
     def drawBackground(self):
         self.__surface.fill([220, 220, 220])
@@ -64,27 +63,26 @@ class Level:
         circle = self.__shapes[1]
         circle.draw(self.__surface)
 
+        x, y, radius, xVelocity, yVelocity, yAcceleration = circle.getPosition()
         if circle.isTouching(self.__shapes[0]):
-            circle.getPosition()[3] /= 1.1
             if circle.getPosition()[3] < 0.2:
                 circle.getPosition()[3] = 0
-            circle.getPosition()[4] = 0
-            circle.getPosition()[5] = 0
+            else:
+                circle.getPosition()[3] /= 1.1
+            circle.getPosition()[4], circle.getPosition()[5] = 0, 0
         if circle.getPosition()[3] != 0 or circle.getPosition()[4] != 0:
             circle.getPosition()[0] += circle.getPosition()[3]
             circle.getPosition()[1] -= circle.getPosition()[4]
             circle.getPosition()[4] -= circle.getPosition()[5]
-        if any(pygame.mouse.get_pressed()) and self.__ammunition > 0:
-            circle.getPosition()[3] = min((pygame.mouse.get_pos()[0] - circle.getPosition()[0]) * .1, 40)
-            circle.getPosition()[4] = min((circle.getPosition()[1] - pygame.mouse.get_pos()[1]) * .1, 40)
+        if any(pygame.mouse.get_pressed()) and self.__energy >= 80:
+            circle.getPosition()[3] = min(40, (pygame.mouse.get_pos()[0] - x) * .1)
+            circle.getPosition()[4] = min(40, (y - pygame.mouse.get_pos()[1]) * .1)
             circle.getPosition()[5] = 0.8
-            self.__ammunition -= 1
-        if not -circle.getPosition()[2] < circle.getPosition()[0] < self.__screen[0] + circle.getPosition()[2]:
-            circle.getPosition()[3] = 0
-            circle.getPosition()[4] = 0
-            circle.getPosition()[5] = 0
-        if circle.getPosition()[3] == 0 and circle.getPosition()[4] == 0 and circle.getPosition()[5] == 0 and self.__ammunition <= 0:
-            self.__ammunition -= 1
+            self.__energy -= 1
+        if not (- radius < x < self.__screen[0] + radius):
+            circle.getPosition()[3], circle.getPosition()[4], circle.getPosition()[5] = 0, 0, 0
+        if (self.__energy < 80) and (circle.getPosition()[3:] == [0, 0, 0]):
+            self.__energy -= 1
 
     def drawCrosshair(self):
         pygame.draw.line(self.__surface, [200, 255, 255], self.__shapes[1].getPosition()[:2], pygame.mouse.get_pos(), 5)
@@ -113,21 +111,25 @@ class Level:
 
             if snowflake.isTouching(self.__shapes[1]):
                 self.__shapes[3].remove(snowflake)
-            snowflake.getPosition()[3] += 1
+            if not (0 < snowflake.getPosition()[0] < self.__screen[0]) and snowflake.isInFinalPosition(1):
+                self.__shapes[3].remove(snowflake)
+
             if not snowflake.isInFinalPosition(1):
-                snowflake.getPosition()[1] += random.randint(5, 10)
-            if snowflake.isInFinalPosition(3):
+                snowflake.getPosition()[0] += snowflake.getPosition()[4]
+                snowflake.getPosition()[1] += snowflake.getPosition()[5]
+            if not snowflake.isInFinalPosition(3):
+                snowflake.getPosition()[3] += 1
+            else:
                 self.__shapes[3].remove(snowflake)
 
     def run(self):
         self.initializeShapes()
-        while self.__ammunition > -80:
+        while self.__energy > 0:
             self.addSnowflake()
 
             self.drawBackground()
             self.drawFloor()
-            if self.drawCircle():
-                break
+            self.drawCircle()
             self.drawSquares()
             self.drawCrosshair()
             self.drawScore()
