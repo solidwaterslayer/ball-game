@@ -91,7 +91,7 @@
     The normal force
     The world border
 >
-> The ```squares```: die when touch by the ball.
+> The ```squares``` die when touch by the ball. :snowman: :snowman:
 > 
 > And last but not least, the ```snowflakes```:
 >
