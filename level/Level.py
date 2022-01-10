@@ -144,7 +144,7 @@ class Level:
             else:
                 self.__shapes[3].remove(snowflake)
 
-    def run(self):
+    def play(self):
         self.initializeShapes()
         while self.__energy > 0:
             self.addSnowflake()

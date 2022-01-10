@@ -7,8 +7,8 @@ from level.Level import Level
 
 if __name__ == '__main__':
     radius = [5, 80, 140]
-    lengths = [13, 26, 52]
-    layers = [5, 10]
+    lengths = [8, 13, 26]
+    layers = [10, 40]
     snowflakeColors = [[50, 10, 10], [255, 255, 255]]
     wind = [-20, -12, -5, 5, 12, 20]
 
@@ -22,5 +22,5 @@ if __name__ == '__main__':
             snowflakeColors[random.randint(0, len(snowflakeColors) - 1)],
             wind[random.randint(0, len(wind) - 1)]
         )
-        gameLevel.run()
+        gameLevel.play()
         time.sleep(0.5)
