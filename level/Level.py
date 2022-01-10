@@ -117,15 +117,13 @@ class Level:
         pygame.draw.line(self.__surface, [200, 255, 255], self.__shapes[1].getPosition()[:2], pygame.mouse.get_pos(), 5)
 
     def drawScore(self):
-        self.__surface.blit(
-            self.__font.render(
-                '{:.0f}%'.format((self.__layers ** 2 - len(self.__shapes[2])) / self.__layers ** 2 * 100),
-                True,
-                [100, 100, 100]
-            ),
-            [int(self.__screen[0] * .40),
-             int(self.__screen[1] * .43)]
+        score = self.__font.render(
+            '{:.0f}%'.format((self.__layers ** 2 - len(self.__shapes[2])) / self.__layers ** 2 * 100),
+            True,
+            [100, 100, 100]
         )
+        hitbox = score.get_rect(center=(self.__screen[0] / 2, self.__screen[1] / 2))
+        self.__surface.blit(score, hitbox)
 
     def drawSnowflakes(self):
         for snowflake in self.__shapes[3]:
