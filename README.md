@@ -6,9 +6,9 @@
 > 
 > This is a 2D game where you catapult a ball into some boxes.
 > 
-> I made this project during sophomore year.
+> I made this project in **_2020 sophomore_** year.
 > 
-> The initial scope was to learn python and OOP concepts.
+> The initial scope was to learn ```python``` and ```OOP``` concepts.
 > 
 > I've mainly been refactoring things since then :sweat_smile:.
 >
