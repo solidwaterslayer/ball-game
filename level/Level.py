@@ -1,5 +1,4 @@
 import random
-import sys
 
 import pygame
 
@@ -62,6 +61,7 @@ class Level:
                 circle.getPosition()[3] = 0
             else:
                 circle.getPosition()[3] /= 1.1
+            circle.getPosition()[1] = self.__shapes[0].getPosition()[1] + 1 - radius
             circle.getPosition()[4], circle.getPosition()[5] = 0, 0
 
     def applyMotionAndGravity(self):
