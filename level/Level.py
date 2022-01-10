@@ -16,7 +16,7 @@ class Level:
         self.__snowflakeColor = snowflakeColor
         self.__wind = wind
 
-        self.__screen = [900, 450]
+        self.__screen = [800, 450]
         self.__surface = pygame.display.set_mode(self.__screen)
         self.__shapes = []
         self.__font = pygame.font.SysFont('Comic Sans MS', 100)
@@ -50,12 +50,6 @@ class Level:
     def drawBackground(self):
         self.__surface.fill([220, 220, 220])
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.display.quit()
-                pygame.quit()
-                sys.exit()
-
     def drawFloor(self):
         self.__shapes[0].draw(self.__surface)
 
@@ -83,11 +77,12 @@ class Level:
         circle = self.__shapes[1]
         x, y, radius, xVelocity, yVelocity, yAcceleration = circle.getPosition()
 
-        if any(pygame.mouse.get_pressed()) and self.__energy >= 80:
-            circle.getPosition()[3] = min(40, (pygame.mouse.get_pos()[0] - x) * .1)
-            circle.getPosition()[4] = min(40, (y - pygame.mouse.get_pos()[1]) * .1)
-            circle.getPosition()[5] = 0.8
-            self.__energy -= 1
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONUP and self.__energy >= 80:
+                circle.getPosition()[3] = min(40, (pygame.mouse.get_pos()[0] - x) * .1)
+                circle.getPosition()[4] = min(40, (y - pygame.mouse.get_pos()[1]) * .1)
+                circle.getPosition()[5] = 0.8
+                self.__energy -= 1
         if (self.__energy < 80) and (circle.getPosition()[3:] == [0, 0, 0]):
             self.__energy -= 1
 

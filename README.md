@@ -23,7 +23,7 @@
 > 
 > Here is a running instance of the project: :snowflake: :snowflake: :snowflake: :snowflake: :snowflake: :snowflake: :snowflake: :snowflake:
 > 
-> https://replit.com/@solidwater969/ballgame?v=1
+> https://replit.com/@solidwater969/ball-game?v=1
 >
 > ---
 
