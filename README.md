@@ -36,6 +36,8 @@
 > 
 > Just download all the files, open them in your favorite IDE, and then hit run.
 > 
+> Your IDE might require a python interpreter. I personally used python 3.10: https://www.python.org/downloads/
+> 
 > The main script is ```LevelGenerator.py```.
 >
 > ---
